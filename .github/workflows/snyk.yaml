@@ -91,4 +91,3 @@ jobs:
             Branch: ${{ github.ref_name }}
           to: ${{ secrets.SECURITY_MAIL_TO }}
           from: CI Pipeline <${{ secrets.SMTP_USERNAME }}>
-``
