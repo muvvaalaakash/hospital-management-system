@@ -19,15 +19,16 @@ jobs:
         uses: actions/checkout@v4
 
       # -------------------------
-      # Setup Node.js
+      # Setup Java (Required)
       # -------------------------
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
-          node-version: 18
+          distribution: temurin
+          java-version: 17
 
       # -------------------------
-      # Install Snyk CLI (NO DOCKER)
+      # Install Snyk CLI
       # -------------------------
       - name: Install Snyk
         run: npm install -g snyk
@@ -35,14 +36,16 @@ jobs:
       # -------------------------
       # Authenticate Snyk
       # -------------------------
-      - name: Snyk Auth
+      - name: Snyk Authentication
         run: snyk auth ${{ secrets.SNYK_TOKEN }}
 
       # -------------------------
-      # Run Snyk Scan
+      # Run Snyk Scan (IMPORTANT PART)
       # -------------------------
-      - name: Run Snyk Security Scan
-        run: snyk test --severity-threshold=high
+      - name: Run Snyk Maven Scan
+        run: |
+          cd HospitalManagementSystem
+          snyk test --severity-threshold=high
 
       # -------------------------
       # Email on SUCCESS
@@ -60,7 +63,7 @@ jobs:
           body: |
             Hi,
 
-            ✅ Snyk scan passed successfully.
+            ✅ Snyk security scan completed successfully.
             No HIGH or CRITICAL vulnerabilities were found.
 
             Repository: ${{ github.repository }}
@@ -84,10 +87,12 @@ jobs:
           body: |
             Hi,
 
-            ❌ Snyk scan failed.
-            HIGH or CRITICAL vulnerabilities were found.
+            ❌ Snyk security scan FAILED.
+            HIGH or CRITICAL vulnerabilities were detected.
 
             Repository: ${{ github.repository }}
             Branch: ${{ github.ref_name }}
+
+            Please check the Snyk dashboard for details.
           to: ${{ secrets.SECURITY_MAIL_TO }}
           from: CI Pipeline <${{ secrets.SMTP_USERNAME }}>
