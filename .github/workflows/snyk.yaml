@@ -81,3 +81,4 @@ jobs:
             Please review the Snyk report and fix the issues.
           to: ${{ secrets.SECURITY_MAIL_TO }}
           from: CI Pipeline <${{ secrets.SMTP_USERNAME }}>
+
