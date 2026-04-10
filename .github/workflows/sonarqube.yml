@@ -1,0 +1,85 @@
+name: SonarQube Security Scan
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+permissions:
+  pull-requests: read
+  contents: read
+
+jobs:
+  sonarqube:
+    runs-on: ubuntu-latest   # Can be self-hosted if needed
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          args: >
+            -Dsonar.projectKey=hospital-management-system
+
+      # ✅ Wait for Quality Gate
+      - name: SonarQube Quality Gate Check
+        uses: SonarSource/sonarqube-quality-gate-action@v1.1.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      # ✅ Email on SUCCESS
+      - name: Send success mail
+        if: success()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: ✅ SonarQube Security Scan Passed
+          body: |
+            Hi,
+
+            SonarQube security scan completed successfully.
+            No vulnerabilities were found.
+
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+
+            ✅ Pipeline Status: SUCCESS
+          to: ${{ github.repository_owner }}@yourcompany.com
+          from: CI Pipeline <no-reply@yourcompany.com>
+
+      # ❌ Email on FAILURE
+      - name: Send failure mail
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: ❌ SonarQube Security Scan Failed
+          body: |
+            Hi,
+
+            SonarQube security scan FAILED.
+            Vulnerabilities or Quality Gate conditions were violated.
+
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+
+            ❌ Pipeline Status: FAILED
+
+            Please check SonarQube dashboard for details.
+          to: ${{ github.repository_owner }}@yourcompany.com
+          from: CI Pipeline <no-reply@yourcompany.com>
