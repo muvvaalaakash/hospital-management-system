@@ -1,0 +1,83 @@
+name: Snyk Security Scan
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  snyk-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # -------------------------
+      # Snyk Vulnerability Scan
+      # -------------------------
+      - name: Run Snyk Security Scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: >
+            test --severity-threshold=high
+
+      # -------------------------
+      # Email on SUCCESS
+      # -------------------------
+      - name: Send success mail
+        if: ${{ success() }}
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: ✅ Snyk Security Scan Passed
+          body: |
+            Hi,
+
+            ✅ Snyk security scan completed successfully.
+            No HIGH or CRITICAL vulnerabilities were found.
+
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+
+            ✅ Pipeline Status: SUCCESS
+          to: ${{ secrets.SECURITY_MAIL_TO }}
+          from: CI Pipeline <${{ secrets.SMTP_USERNAME }}>
+
+      # -------------------------
+      # Email on FAILURE
+      # -------------------------
+      - name: Send failure mail
+        if: ${{ failure() }}
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: ❌ Snyk Security Scan Failed
+          body: |
+            Hi,
+
+            ❌ Snyk security scan FAILED.
+
+            HIGH or CRITICAL vulnerabilities were detected.
+
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+
+            Please review the Snyk report and fix the issues.
+          to: ${{ secrets.SECURITY_MAIL_TO }}
+          from: CI Pipeline <${{ secrets.SMTP_USERNAME }}>
