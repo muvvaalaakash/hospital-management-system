@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   sonarqube:
-    runs-on: ubuntu-latest   # Can be self-hosted if needed
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -29,20 +29,20 @@ jobs:
           args: >
             -Dsonar.projectKey=hospital-management-system
 
-      # ✅ Wait for Quality Gate
       - name: SonarQube Quality Gate Check
         uses: SonarSource/sonarqube-quality-gate-action@v1.1.0
+        timeout-minutes: 5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
-      # ✅ Email on SUCCESS
       - name: Send success mail
-        if: success()
+        if: ${{ success() }}
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
-          server_port: 587
+          server_port: 465
+          secure: true
           username: ${{ secrets.SMTP_USERNAME }}
           password: ${{ secrets.SMTP_PASSWORD }}
           subject: ✅ SonarQube Security Scan Passed
@@ -56,16 +56,16 @@ jobs:
             Branch: ${{ github.ref_name }}
 
             ✅ Pipeline Status: SUCCESS
-          to: ${{ github.repository_owner }}@gmail.com
-          from: CI Pipeline <no-reply@yourcompany.com>
+          to: ${{ secrets.SECURITY_MAIL_TO }}
+          from: CI Pipeline <${{ secrets.SMTP_USERNAME }}>
 
-      # ❌ Email on FAILURE
       - name: Send failure mail
-        if: failure()
+        if: ${{ failure() }}
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
-          server_port: 587
+          server_port: 465
+          secure: true
           username: ${{ secrets.SMTP_USERNAME }}
           password: ${{ secrets.SMTP_PASSWORD }}
           subject: ❌ SonarQube Security Scan Failed
@@ -81,5 +81,5 @@ jobs:
             ❌ Pipeline Status: FAILED
 
             Please check SonarQube dashboard for details.
-          to: ${{ github.repository_owner }}@gmail.com
-          from: CI Pipeline <no-reply@yourcompany.com>
+          to: ${{ secrets.SECURITY_MAIL_TO }}
+          from: CI Pipeline <${{ secrets.SMTP_USERNAME }}>
