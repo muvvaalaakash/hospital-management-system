@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   sonarqube:
-    runs-on: ubuntu-latest
+    runs-on: sonar
 
     steps:
       - name: Checkout code
