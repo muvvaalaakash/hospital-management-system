@@ -56,7 +56,7 @@ jobs:
             Branch: ${{ github.ref_name }}
 
             ✅ Pipeline Status: SUCCESS
-          to: ${{ github.repository_owner }}@yourcompany.com
+          to: ${{ github.repository_owner }}@gmail.com
           from: CI Pipeline <no-reply@yourcompany.com>
 
       # ❌ Email on FAILURE
@@ -81,5 +81,5 @@ jobs:
             ❌ Pipeline Status: FAILED
 
             Please check SonarQube dashboard for details.
-          to: ${{ github.repository_owner }}@yourcompany.com
+          to: ${{ github.repository_owner }}@gmail.com
           from: CI Pipeline <no-reply@yourcompany.com>
